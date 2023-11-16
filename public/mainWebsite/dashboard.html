@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/mainWebsite/dashboard.css" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="/mainWebsite/resources/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <h1 class="title">Dashboard</h1>
+    <div id="navbar-container"></div>
+    <div class="toggle-button">
+        <label for="toggle-switch">Toggle Cards</label>
+        <input type="checkbox" id="toggle-switch" onchange="toggleCards()">
+    </div>
+
+    <!-- Flip card for Door State -->
+    <div class="container">
+        <div class="flip-card Door-State" onclick="toggleFlip(this)">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <div class="front-content front-door">
+                        <h2>Door State</h2>
+                        <div class="status" id="doorStatus">
+                            Status: Loading...
+                        </div>
+                        <div class="time-Updated" id="door-time">
+                            Last: Time Updated
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-back">
+                    <div class="back-content">
+                        <canvas id="doorGraphCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flip Card for Proximity  -->
+        <div class="flip-card Proximity" onclick="toggleFlip(this)">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <div class="front-content front-proximity">
+                        <h2 class="title">Proximity</h2>
+                        <div class="in">
+                            <h3>In: <span id="proximityIn">Loading...</span></h3>
+                        </div>
+                        <div class="out">
+                            <h3>Out: <span id="proximityOut">Loading...</span></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-back">
+                    <div class="back-content" id="proximityGraphContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flip Card for Vibration -->
+        <div class="flip-card Vibration" onclick="toggleFlip(this)">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <div class="front-content front-vibration">
+                        <h2>Vibration</h2>
+                        <div class="status" id="vibrationStatus">Status: Loading...</div>
+                    </div>
+                </div>
+                <div class="flip-card-back">
+                    <div class="back-content" id="vibrationGraphContainer">Back Content</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/mainWebsite/navLoader.js" defer></script>
+    <script src="/mainWebsite/dashboard.js"></script>
+</body>
+</html>

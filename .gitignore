@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Generated files
+package-lock.json
+npm-debug.log
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Optional: lock files
+yarn.lock
+pnpm-lock.yaml
+
+# Smartlock
+smartlock/
+
+# Optional: SQL files
+*.sql

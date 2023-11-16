@@ -1,0 +1,35 @@
+:root{
+    font-size: 16px;
+}
+
+.accordions-container{
+    margin-left: 7rem;
+}
+/* .accordion-body {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+} 
+*/
+@media only screen and (max-width: 600px) {
+    .accordions-container{
+        flex-direction: column;
+        margin-left: 4%;
+        margin-top: 14px;        
+    }
+
+    .out-camera{
+        margin-bottom: 15px;
+        width: 90%;
+    }
+    .in-camera{
+        margin-bottom: 3px;
+        width: 90%;
+    }
+    
+}
+
+
+
+
+

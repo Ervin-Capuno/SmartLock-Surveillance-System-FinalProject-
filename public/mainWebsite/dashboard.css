@@ -1,0 +1,149 @@
+:root {
+    font-size: 16px;
+  }
+  
+  .title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .toggle-button {
+    margin-bottom: 15px;
+    margin-top: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* layout for the dashboard */
+  .container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    gap: 15px;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: row;
+    margin-left: 7rem;
+    margin-right: 20px;
+    height: 100vh;
+    grid-template-areas: "Door-State Door-State Door-State Door-State Door-State Door-State Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Door-State Door-State Door-State Door-State Door-State Door-State Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Door-State Door-State Door-State Door-State Door-State Door-State Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Door-State Door-State Door-State Door-State Door-State Door-State Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Door-State Door-State Door-State Door-State Door-State Door-State Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Door-State Door-State Door-State Door-State Door-State Door-State Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Vibration Vibration Vibration Vibration Vibration Vibration Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Vibration Vibration Vibration Vibration Vibration Vibration Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Vibration Vibration Vibration Vibration Vibration Vibration Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Vibration Vibration Vibration Vibration Vibration Vibration Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Vibration Vibration Vibration Vibration Vibration Vibration Proximity Proximity Proximity Proximity Proximity Proximity"
+                        "Vibration Vibration Vibration Vibration Vibration Vibration Proximity Proximity Proximity Proximity Proximity Proximity";
+  }
+  
+  /*style for the front card content and the back card content*/
+  .flip-card-front,
+  .flip-card-back {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    backface-visibility: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.5s, border 0.5s;
+    border: 2px solid transparent;
+  }
+  
+  .front-door,
+  .front-proximity,
+  .front-vibration {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Specific styles for each card */
+  .Door-State,
+  .Proximity,
+  .Vibration {
+    width: 100%;
+    height: 100%;
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .flip-card-inner {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
+  }
+  
+  /* Add this style to handle the flipped state */
+  .flipped .flip-card-inner {
+    transform: rotateY(180deg);
+  }
+  
+  /* Front and Back content styles */
+  .front-content,
+  .back-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    backface-visibility: hidden;
+  }
+  .flip-card-inner {
+    position: relative;
+}
+
+.back-content {
+    position: absolute;
+    width: 100%; /* Take up the full width of the flip card */
+    height: 100%; /* Take up the full height of the flip card */
+    box-sizing: border-box;
+    padding: 10px; /* Adjust padding as needed */
+}
+  
+  /* Specific styles for each card */
+  .Door-State {
+    grid-area: Door-State;
+  }
+  
+  .Proximity {
+    grid-area: Proximity;
+  }
+  
+  .Vibration {
+    grid-area: Vibration;
+  }
+  
+  .flip-card-back {
+    transform: rotateY(180deg);
+  }
+  
+  @media only screen and (max-width: 600px) {
+    .container {
+      margin-bottom: 5rem;
+      display: flex;
+      flex-direction: column;
+      margin-left: 4%;
+      height: 1250px;
+      margin-right: 2%;
+    }
+  
+    .flip-card {
+      width: 95%;
+      height: 96%;
+    }
+  
+    .Vibration {
+      margin-bottom: 20px;
+    }
+  }
+  

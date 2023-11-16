@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In</title>
+    <!-- Link to Bootstrap CSS -->
+    <link rel="icon" type="image/x-icon" href="mainWebsite/resources/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Modal Trigger Button (Hidden) -->
+    <button id="modalTriggerBtn" type="button" class="btn btn-primary" data-bs-toggle="modal"
+        data-bs-target="#myModal" style="display: none;">
+        Open Modal
+    </button>
+
+    <!-- Modal For Sign In -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="signInModal" aria-hidden="true"
+        data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signInModal">Log In</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm" action="/login" method="post">
+                        <div class="mb-3">
+                            <label for="Email" class="form-label">Email</label>
+                            <input type="text" class="form-control" id="email" name="email" placeholder="Enter your Email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Enter your password">
+                        </div>
+
+                        <!-- Buttons and links div -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </div>
+
+                        <!-- Forgot Password Link -->
+                        <p class="text-center mt-3"><a href="forgotPassword.html">Forgot Password?</a></p>
+                    </form>
+                    <hr>
+                    <!-- Sign Up button div -->
+                    <div class="text-center mt-3">
+                        <a href="signUp.html" class="btn btn-success btn-block">Create an Account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Trigger the modal when the page loads
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalTriggerBtn = document.getElementById('modalTriggerBtn');
+            modalTriggerBtn.click();
+        });
+    </script>
+
+</body>
+
+</html>

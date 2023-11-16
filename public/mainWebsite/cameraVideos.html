@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/mainWebsite/camera.css">
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/x-icon" href="resources/favicon.ico">
+    <title>Video Camera</title>
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    
+    <div class="camera-container">
+        <div class="out-camera">
+            <h2>Outside Camera</h2>
+            <iframe class="camera-iframe" id="outCameraIframe" frameborder="0" allowfullscreen>
+                <!-- Your video content for outCameraIframe goes here -->
+            </iframe>
+        </div>
+        <div class="in-camera">
+            <h2>Inside Camera</h2>
+            <div id="inCameraLoader">Loading...</div>
+            <iframe class="camera-iframe" id="inCameraIframe" frameborder="0" allowfullscreen>
+                <!-- Your video content for inCameraIframe goes here -->
+            </iframe>
+        </div>
+    </div>
+
+    <script src="/mainWebsite/navLoader.js"></script>
+    <script>
+        // Show loading indicator for the inside camera
+        document.getElementById('inCameraIframe').style.display = 'none';
+        document.getElementById('inCameraLoader').style.display = 'block';
+
+        // Fetch the camera data for the authenticated user from the server
+        fetch('/api/camera')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to fetch camera data');
+    }
+    return response.json();
+  })
+  .then(data => {
+    try {
+      // Assuming the response is an array of camera objects
+      // You may need to adjust this based on your actual response format
+      const inCameraUrl = data[0].cameraIn;
+      const outCameraUrl = data[0].cameraOut;
+
+      // Set the fetched URLs as the source of the respective iframes
+      document.getElementById('inCameraIframe').src = inCameraUrl;
+      document.getElementById('outCameraIframe').src = outCameraUrl;
+
+      // Hide loading indicator for the inside camera
+      document.getElementById('inCameraIframe').style.display = 'block';
+      document.getElementById('inCameraLoader').style.display = 'none';
+    } catch (error) {
+      console.error('Error parsing camera data:', error);
+      // Handle parsing error
+    }
+  })
+  .catch(error => {
+    console.error('Error fetching camera data:', error);
+    // Handle the error
+  });
+    </script>
+</body>
+</html>
