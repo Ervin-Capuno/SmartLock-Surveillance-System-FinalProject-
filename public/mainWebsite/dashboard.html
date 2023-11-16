@@ -66,12 +66,19 @@
             <div class="flip-card-inner">
                 <div class="flip-card-front">
                     <div class="front-content front-vibration">
-                        <h2>Vibration</h2>
-                        <div class="status" id="vibrationStatus">Status: Loading...</div>
+                        <h2>Vibration State</h2>
+                        <div class="status" id="vibrationStatus">
+                            Status: Loading...
+                        </div>
+                        <div class="time-Updated" id="vibration-time">
+                            Last: Time Updated
+                        </div>
                     </div>
                 </div>
                 <div class="flip-card-back">
-                    <div class="back-content" id="vibrationGraphContainer">Back Content</div>
+                    <div class="back-content" >
+                        <canvas id="vibrationGraphContainer"></canvas>
+                    </div>
                 </div>
             </div>
         </div>

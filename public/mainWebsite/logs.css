@@ -11,6 +11,7 @@
     white-space: nowrap;
 } 
 */
+
 @media only screen and (max-width: 600px) {
     .accordions-container{
         flex-direction: column;

@@ -73,37 +73,6 @@
         </li>
       </ul>
     </nav>
-  
-
-    <script type="module">
-       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-       import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyAnBPT65Kbl2NhTe_CadDJCjnruM7vg4ss",
-            authDomain: "smartlock-surviellance-system.firebaseapp.com",
-            databaseURL: "https://smartlock-surviellance-system-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "smartlock-surviellance-system",
-            storageBucket: "smartlock-surviellance-system.appspot.com",
-            messagingSenderId: "516963910372",
-            appId: "1:516963910372:web:c2102c0d0ce0d2125e22f1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-
-        const auth = getAuth();
-
-
-
-        logoutButton.addEventListener("click", function () {
-            auth.signOut()
-                .then(function() {
-                    console.log("User has been logged out");
-                })
-                .catch(function(error) {
-                    console.error("Error logging out:", error);
-                });
-        });
-    </script>
 
   </body>
 </html>

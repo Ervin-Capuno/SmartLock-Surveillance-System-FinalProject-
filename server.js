@@ -7,8 +7,8 @@ const { body, validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const path = require('path');
-
-const socketio = require('socket.io');
+const schedule = require('node-schedule');
+const moment = require('moment-timezone');
 require('dotenv').config();
 
 
@@ -20,7 +20,48 @@ const server = app.listen(port, () => {
 });
 
 
-const io = socketio(server)
+// MySQL Connection
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  timezone: '+08:00'
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL');
+});
+
+
+const midnightTask = schedule.scheduleJob('0 0 * * *', () => {
+  // This function will be executed at 12:00 AM in the Philippine time zone
+
+  const philippineTime = moment().tz('Asia/Manila'); // Get current time in the Philippine time zone
+  console.log(`Executing task at 12:00 PM in the Philippine time zone: ${philippineTime.format('YYYY-MM-DD HH:mm:ss')}`);
+
+  // Delete all data from the 'door' table
+  db.query('DELETE FROM door', (error) => {
+    if (error) {
+      console.error('Error deleting data from door table:', error);
+    } else {
+      console.log('Data deleted from door table at 12:00 Am');
+    }
+  });
+
+  // Delete all data from the 'vibrations' table
+  db.query('DELETE FROM vibrations', (error) => {
+    if (error) {
+      console.error('Error deleting data from vibrations table:', error);
+    } else {
+      console.log('Data deleted from vibrations table at 9:00 PM');
+    }
+  });
+});
 
 
 // Middleware
@@ -34,21 +75,6 @@ app.use(session({
   },
 }));
 
-// MySQL Connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-});
-
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to MySQL:', err);
-    return;
-  }
-  console.log('Connected to MySQL');
-});
 
 
 
@@ -395,3 +421,55 @@ app.get('/api/latest-door-states', (req, res) => {
       }
   );
 });
+
+
+app.get('/api/latest-vibrations', (req, res) => {
+  // Get the user ID from the session
+  const userId = req.session.userId;
+
+  if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Use the user ID in the SQL query
+  const query = 'SELECT vibrationValue, vibrationTimestamp FROM vibrations WHERE userId = ? ORDER BY vibrationTimestamp DESC LIMIT 10';
+
+  db.query(query, [userId], (error, results) => {
+      if (error) {
+          console.error('Error fetching latest vibrations:', error);
+          res.status(500).json({ error: 'Internal Server Error' });
+      } else {
+          const vibrations = results.map(record => ({
+              vibrationTimestamp: record.vibrationTimestamp.toISOString(), // Convert to string
+              vibrationValue: record.vibrationValue,
+          }));
+
+          res.json({ vibrations });
+      }
+  });
+});
+
+app.get('/api/all-vibrations', (req, res) => {
+  const userId = req.session.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const query = 'SELECT vibrationValue, vibrationTimestamp FROM vibrations WHERE userId = ?';
+
+  db.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error('Error fetching all vibrations:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      const vibrations = results.map(record => ({
+        vibrationTimestamp: record.vibrationTimestamp.toISOString(),
+        vibrationValue: record.vibrationValue,
+      }));
+
+      res.json({ vibrations });
+    }
+  });
+});
+
