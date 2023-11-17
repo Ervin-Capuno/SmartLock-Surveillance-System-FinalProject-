@@ -18,29 +18,14 @@ function toggleCards() {
 }
 
 // Add an event listener for each flip card to detect clicks
-document.querySelectorAll('.flip-card').forEach(card => {
-    card.addEventListener('click', () => toggleFlip(card));
-
-    // Add an event listener for each front content div to allow clicks even when the card is not flipped
-    const frontContent = card.querySelector('.flip-card-front .front-content');
-    frontContent.addEventListener('click', () => {
-        // Toggle the flipped class when clicking on the front content
-        toggleFlip(card);
-        console.log('Front content clicked');
-    });
-
-    // Add an event listener for each back content div to allow clicks and prevent propagation
-    const backContent = card.querySelector('.flip-card-back .back-content');
-    backContent.addEventListener('click', () => {
-        // Toggle the flipped class when clicking on the back content, regardless of the toggle switch state
-        toggleFlip(card);
-        console.log('Back content clicked');
-    });
-});
-
 async function fetchAndCreateLineChart(type, chartConfig, endpoint, statusElementId, timeElementId) {
     try {
         const canvas = document.getElementById(chartConfig.canvasId);
+
+        // Destroy existing chart instance if it exists
+        if (window[chartConfig.chartInstance]) {
+            window[chartConfig.chartInstance].destroy();
+        }
 
         // Fetch data from your server endpoint
         const response = await fetch(`/api/${endpoint}`);
@@ -86,9 +71,10 @@ async function fetchAndCreateLineChart(type, chartConfig, endpoint, statusElemen
                     x: {
                         type: 'time',
                         time: {
-                            unit: 'hour',
+                            unit: 'minute', // Set the unit to 'minute'
+                            stepSize: 5,     // Set the step size to 5 minutes
                             displayFormats: {
-                                hour: 'yyyy-MM-dd HH:mm'
+                                minute: 'HH:mm', // Format for the x-axis labels
                             }
                         }
                     },
@@ -142,7 +128,7 @@ const vibrationChartConfig = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const intervalInSeconds = 10;
+    const intervalInSeconds = 4;
     const intervalInMilliseconds = intervalInSeconds * 1000;
     setInterval(() => fetchAndCreateLineChart('door',doorChartConfig, 'latest-door-states', 'doorStatus', 'door-time'), intervalInMilliseconds);
     setInterval(() => fetchAndCreateLineChart('vibrations',vibrationChartConfig, 'latest-vibrations', 'vibrationStatus', 'vibration-time'), intervalInMilliseconds);

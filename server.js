@@ -9,11 +9,18 @@ const crypto = require('crypto');
 const path = require('path');
 const schedule = require('node-schedule');
 const moment = require('moment-timezone');
+const ejs = require('ejs');
+const fs = require('fs');
 require('dotenv').config();
+
+
 
 
 const app = express();
 const port = 3000;
+
+
+app.set('view engine', 'ejs');
 
 const server = app.listen(port, () => {
   console.log('Server running! port ${port}')
@@ -210,6 +217,73 @@ app.post('/login', async (req, res) => {
   });
 });
 
+
+app.get('/forgot-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'forgotPassword.html'));
+});
+
+app.post('/forgot-password', (req, res) => {
+  const { email } = req.body;
+
+  // Check if the email exists in the database
+  db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
+    if (err) {
+      console.error('Error querying user:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    const user = results[0];
+
+    if (!user) {
+      // If the email is not found, you may want to respond with a message like "Email not registered"
+      res.status(404).json({ error: 'Email not registered' });
+      return;
+    }
+
+    // Generate a password reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Store the reset token and its expiration time in the database
+    const resetTokenExpiration = moment().add(1, 'hour').format('YYYY-MM-DD HH:mm:ss');
+    db.query(
+      'UPDATE users SET reset_token = ?, reset_token_expiration = ? WHERE id = ?',
+      [resetToken, resetTokenExpiration, user.id],
+      (updateErr) => {
+        if (updateErr) {
+          console.error('Error updating reset token:', updateErr);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+
+        // Send a password reset email
+        sendPasswordResetEmail(email, resetToken);
+
+        // Respond with a success message
+        res.json({ message: 'Password reset email sent successfully' });
+      }
+    );
+  });
+});
+
+// Function to send password reset email
+function sendPasswordResetEmail(email, token) {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Reset Your Password',
+    text: `Click the following link to reset your password: http://localhost:3000/reset-password?token=${token}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending password reset email:', error);
+    } else {
+      console.log('Password reset email sent:', info.response);
+    }
+  });
+}
+
 app.get('/dashboard', (req, res) => {
   // Check if the user is authenticated
   if (req.session.userId) {
@@ -301,6 +375,90 @@ function sendVerificationEmail(email, token) {
     }
   });
 }
+
+app.get('/reset-password', (req, res) => {
+  const { token } = req.query;
+
+  // Log the contents of the "views" directory
+  const viewsDirectory = path.join(__dirname, 'views');
+  fs.readdir(viewsDirectory, (err, files) => {
+    if (err) {
+      console.error('Error reading views directory:', err);
+    } else {
+      console.log('Contents of views directory:', files);
+    }
+  });
+
+  if (!token) {
+    return res.status(400).json({ error: 'Reset token is missing' });
+  }
+
+  db.query(
+    'SELECT * FROM users WHERE reset_token = ? AND reset_token_expiration > NOW()',
+    [token],
+    (error, results) => {
+      if (error) {
+        console.error('Error verifying reset token:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      const user = results[0];
+
+      if (!user) {
+        console.error('Invalid or expired reset token:', token);
+        return res.status(400).json({ error: 'Invalid or expired reset token' });
+      }
+
+      // Render the EJS template with the token
+      res.render('resetPassword', { token });
+    }
+  );
+});
+// Password reset form submission route
+app.post('/reset-password', (req, res) => {
+  const { token, newPassword, confirmPassword } = req.body;
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: 'Passwords do not match' });
+  }
+
+  db.query(
+    'SELECT * FROM users WHERE reset_token = ? AND reset_token_expiration > NOW()',
+    [token],
+    (error, results) => {
+      if (error) {
+        console.error('Error verifying reset token:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      const user = results[0];
+
+      if (!user) {
+        return res.status(400).json({ error: 'Invalid or expired reset token' });
+      }
+
+      bcrypt.hash(newPassword, 10, (hashError, hashedPassword) => {
+        if (hashError) {
+          console.error('Error hashing password:', hashError);
+          return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        db.query(
+          'UPDATE users SET password = ?, reset_token = NULL, reset_token_expiration = NULL WHERE id = ?',
+          [hashedPassword, user.id],
+          (updateError) => {
+            if (updateError) {
+              console.error('Error updating password in the database:', updateError);
+              return res.status(500).json({ error: 'Internal Server Error' });
+            }
+
+            res.json({ message: 'Password reset successfully' });
+          }
+        );
+      });
+    }
+  );
+});
 
 
 //door States 
