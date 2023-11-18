@@ -68,7 +68,7 @@
         <div class="modal-content">
             <span class="close-btn" id="closeModal">&times;</span>
             <img src="vibration.gif" alt="alert for vibrations">
-            <p>There is an abnormality on the vibration of the door, Pleas go to the camera navigation to confirm this!</p>
+            <p>There is an abnormality on the vibration of your door Please go to the Cameras to confirm this!</p>
             <button id="okBtn">OK</button>
         </div>
     </div>
@@ -92,9 +92,8 @@
             }
 
             okBtn.onclick = function() {
-                // Add functionality for the "OK" button to display an alert
-                alert("OK button clicked");
-                modal.style.display = "none";
+                // Redirect to the "cameraVideos.html" page
+                window.location.href = "/mainWebsite/cameraVideos.html";
             }
 
             // Close the modal if the user clicks outside of it
