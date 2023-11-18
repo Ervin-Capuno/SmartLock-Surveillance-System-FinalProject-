@@ -13,12 +13,8 @@ const ejs = require('ejs');
 const fs = require('fs');
 require('dotenv').config();
 
-
-
-
 const app = express();
 const port = 3000;
-
 
 app.set('view engine', 'ejs');
 
@@ -81,9 +77,6 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000, // Set the session duration to one day
   },
 }));
-
-
-
 
 
 // Nodemailer Configuration
@@ -357,7 +350,6 @@ app.get('/verify', async (req, res) => {
 });
 
 
-
 // Function to send verification email
 function sendVerificationEmail(email, token) {
   const mailOptions = {
@@ -414,6 +406,7 @@ app.get('/reset-password', (req, res) => {
     }
   );
 });
+
 // Password reset form submission route
 app.post('/reset-password', (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
@@ -521,38 +514,6 @@ app.post('/api/door-state', (req, res) => {
 });
 
 
-
-app.get('/api/door-state', (req, res) => {
-  const userId = req.session.userId;
-
-  if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  // Fetch the latest door state with timestamp for the authenticated user
-  db.query(
-    'SELECT doorState, doorTimestamp FROM door WHERE userId = ? ORDER BY doorTimestamp DESC LIMIT 1',
-    [userId],
-    (error, results) => {
-      if (error) {
-        console.error('Error querying door state:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
-      }
-
-      if (results.length > 0) {
-        const latestDoorState = results[0];
-        res.json({
-          doorState: latestDoorState.doorState,
-          doorTimestamp: latestDoorState.doorTimestamp
-        });
-      } else {
-        res.json({ doorState: null, doorTimestamp: null }); // If no records are found
-      }
-    }
-  );
-});
-
-
 app.get('/api/latest-door-states', (req, res) => {
   const userId = req.session.userId;
 
@@ -580,7 +541,7 @@ app.get('/api/latest-door-states', (req, res) => {
   );
 });
 
-
+//for vibrations
 app.get('/api/latest-vibrations', (req, res) => {
   // Get the user ID from the session
   const userId = req.session.userId;
@@ -631,3 +592,164 @@ app.get('/api/all-vibrations', (req, res) => {
   });
 });
 
+
+// Function to handle proximity sensor alert
+async function handleProximitySensor(userId, tableName) {
+  try {
+    const triggerField = tableName === 'proximitySensorOut' ? 'triggerOut' : 'triggerIn';
+
+    // Fetch trigger and userId for the current session user
+    const query = `SELECT ${triggerField}, userId FROM ${tableName} WHERE userId = ?`;
+    const [rows] = await db.promise().query(query, [userId]);
+
+    // Check if the expected properties exist
+    if (rows && rows.length > 0 && rows[0].hasOwnProperty(triggerField)) {
+      const trigger = rows[0][triggerField];
+
+      console.log(`${tableName} - User ${userId}: trigger is ${trigger}`);
+
+      return { alert: trigger === 1 };
+    } else {
+      console.error(`Unexpected data structure for ${tableName}`);
+      return { alert: false };
+    }
+  } catch (error) {
+    console.error(`Error fetching ${tableName} data:`, error);
+    throw error;
+  }
+}
+// Endpoint for proximity sensor out
+app.get('/api/proximity-sensor-out', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const result = await handleProximitySensor(userId, 'proximitySensorOut');
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for proximity sensor in
+app.get('/api/proximity-sensor-in', async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const result = await handleProximitySensor(userId, 'proximitySensorIn');
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+//for customer Out
+app.get('/api/latest-customer-out', (req, res) => {
+  const userId = req.session.userId;
+
+  if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Fetch the latest 10 customerOut states for the authenticated user
+  db.query(
+      'SELECT customerOut, customerTimeStampOut FROM customersOut WHERE userId = ? ORDER BY customerTimeStampOut DESC LIMIT 10',
+      [userId],
+      (error, results) => {
+          if (error) {
+              console.error('Error querying latest customerOut states:', error);
+              return res.status(500).json({ error: 'Internal Server Error' });
+          }
+
+          const latestCustomerOutStates = results.map(record => ({
+              customerTimeStampOut: record.customerTimeStampOut.toISOString(), // Convert to string
+              customerOut: record.customerOut,
+          }));
+
+          res.json({ customerOutStates: latestCustomerOutStates });
+      }
+  );
+});
+
+app.get('/api/customer-out-data', (req, res) => {
+  const userId = req.session.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const query = 'SELECT customerOut, customerTimeStampOut FROM customersOut WHERE userId = ?';
+
+  db.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error('Error fetching customer out data:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      const customerOutData = results.map(record => ({
+        customerOut: record.customerOut,
+        customerTimeStampOut: record.customerTimeStampOut.toISOString(),
+      }));
+
+      res.json({ customerOutData });
+    }
+  });
+});
+
+
+//for customer In
+app.get('/api/latest-customer-in', (req, res) => {
+  const userId = req.session.userId;
+
+  if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Fetch the latest 10 customerIn states for the authenticated user
+  db.query(
+      'SELECT customerIn, customerTimeStampIn FROM customersIn WHERE userId = ? ORDER BY customerTimeStampIn DESC LIMIT 10',
+      [userId],
+      (error, results) => {
+          if (error) {
+              console.error('Error querying latest customerIn states:', error);
+              return res.status(500).json({ error: 'Internal Server Error' });
+          }
+
+          const latestCustomerInStates = results.map(record => ({
+              customerTimeStampIn: record.customerTimeStampIn.toISOString(), // Convert to string
+              customerIn: record.customerIn,
+          }));
+
+          res.json({ customerInStates: latestCustomerInStates });
+      }
+  );
+});
+
+app.get('/api/customer-data', (req, res) => {
+  const userId = req.session.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const query = 'SELECT customerIn, customerTimeStampIn FROM customersIn WHERE userId = ?';
+
+  db.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error('Error fetching customer data:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      const customerData = results.map(record => ({
+        customerIn: record.customerIn,
+        customerTimeStampIn: record.customerTimeStampIn.toISOString(),
+      }));
+
+      res.json({ customerData });
+    }
+  });
+});
