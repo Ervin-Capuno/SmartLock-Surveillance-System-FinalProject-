@@ -5,6 +5,17 @@ async function loadNavbar() {
     const data = await response.text();
     document.getElementById('navbar-container').innerHTML = data;
 
+    // Check proximity sensor values and update content of div elements
+    const { alert: alertOut } = await getProximitySensorAlert('/api/proximity-sensor-out');
+    const { alert: alertIn } = await getProximitySensorAlert('/api/proximity-sensor-in');
+
+    // Show modal if needed
+    if (alertOut) {
+      showModal('/mainWebsite/notifications/personOut.html');
+    } else if (alertIn) {
+      showModal('/mainWebsite/notifications/personIn.html');
+    }
+
     // Add event listener to the logout button
     const logoutButton = getLogoutButton();
     if (logoutButton) {
@@ -19,24 +30,23 @@ async function loadNavbar() {
   }
 }
 
-// Expose the logout button
-function getLogoutButton() {
-  return document.getElementById('logout-button');
-}
-
-async function fetchDataAndHandleAlert(endpoint) {
+// Function to get proximity sensor alert
+async function getProximitySensorAlert(apiEndpoint) {
   try {
-    const response = await fetch(endpoint);
+    const response = await fetch(apiEndpoint);
     const data = await response.json();
-
-    if (data.alert) {
-      // Display an alert if the server indicates that an alert should be shown
-      alert("There is a person at the door. Please go to cameras to confirm this!");
-    }
+    return data;
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error(`Error getting proximity sensor alert:`, error);
     throw error;
   }
+}
+
+// Function to show modal
+function showModal(notificationUrl) {
+  // Implement your modal display logic here
+  console.log(`Show modal for ${notificationUrl}`);
+  // You can use a library like Bootstrap or create your custom modal display logic
 }
 
 // Call the functions in a sequential manner when your page loads
@@ -44,10 +54,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   try {
     // Load the navbar first
     await loadNavbar();
-
-    // After the navbar is loaded, fetch data and handle alerts
-    await fetchDataAndHandleAlert('/api/proximity-sensor-out');
-    await fetchDataAndHandleAlert('/api/proximity-sensor-in');
   } catch (error) {
     // Handle errors that might occur during the process
     console.error('Error during page initialization:', error);

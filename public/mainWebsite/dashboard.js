@@ -43,7 +43,7 @@ async function fetchAndCreateLineChart(type, chartConfig, endpoint, statusElemen
         if (type === 'door') {
             latestValue = chartValues.length > 0 ? (chartValues[0] === 1 ? 'Open' : 'Closed') : 'Unknown';
         } else if (type === 'vibrations') {
-            latestValue = chartValues.length > 0 ? (chartValues[0] >= 60 ? 'Danger' : 'Normal') : 'Unkown';
+            latestValue = chartValues.length > 0 ? (chartValues[0] >= 70 ? 'Danger' : 'Normal') : 'Unkown';
         }
         const latestTimestamp = timestamps.length > 0 ? timestamps[0].toLocaleString() : 'Unknown';
 
