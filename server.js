@@ -11,8 +11,7 @@ const schedule = require('node-schedule');
 const moment = require('moment-timezone');
 const ejs = require('ejs');
 const fs = require('fs');
-const util = require('util');
-const queryAsync = util.promisify(db.query);
+
 require('dotenv').config();
 
 const app = express();
@@ -33,6 +32,7 @@ const db = mysql.createConnection({
   database: process.env.DB_DATABASE,
   timezone: '+08:00'
 });
+
 
 db.connect((err) => {
   if (err) {
@@ -456,11 +456,10 @@ app.post('/reset-password', (req, res) => {
 });
 
 
-app.post('/api/door-control', async (req, res) => {
+app.post('/api/door-control', (req, res) => {
   try {
     const { doorState } = req.body;
-    const userId = req.session.userId; // Make sure session middleware is configured
-
+    const userId = req.session.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -468,21 +467,25 @@ app.post('/api/door-control', async (req, res) => {
     // Log the received doorState for debugging
     console.log('Received doorState:', doorState);
 
-    // Update the door state in the database using async/await
+    // Update the door state in the database using callbacks
     const query = 'INSERT INTO door (doorState, userId, doorTimestamp) VALUES (?, ?, CURRENT_TIMESTAMP)';
-    await queryAsync(query, [doorState, userId]);
+    db.query(query, [doorState, userId], (error, results) => {
+      if (error) {
+        console.error('Error handling door control request:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
 
-    // Log the door state to the terminal
-    const doorStatus = doorState === 1 ? 'open' : 'closed';
-    console.log(`Door state updated successfully. Current state: ${doorStatus}`);
+      // Log the door state to the terminal
+      const doorStatus = doorState === 1 ? 'open' : 'closed';
+      console.log("Door state updated successfully. Current state: ${doorStatus}");
 
-    res.json({ message: `Door is now ${doorStatus}` });
+      res.json({ message: "Door is now ${doorStatus}" });
+    });
   } catch (error) {
     console.error('Error handling door control request:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 
 app.get('/api/all-door-states', (req, res) => {
@@ -538,6 +541,39 @@ app.get('/api/latest-door-states', (req, res) => {
       }
   );
 });
+
+
+app.get('/api/check-latest-customer-data', (req, res) => {
+  const userId = req.session.userId;
+
+  if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const customerOutQuery = 'SELECT customerOut, customerTimeStampOut FROM customersOut WHERE userId = ? ORDER BY customerTimeStampOut DESC LIMIT 10';
+  const customerInQuery = 'SELECT customerIn, customerTimeStampIn FROM customersin WHERE userId = ? ORDER BY customerTimeStampIn DESC LIMIT 10';
+
+  db.query(customerOutQuery, [userId], (errorOut, resultsOut) => {
+      if (errorOut) {
+          console.error('Error fetching latest customer out data:', errorOut);
+          return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      db.query(customerInQuery, [userId], (errorIn, resultsIn) => {
+          if (errorIn) {
+              console.error('Error fetching latest customer in data:', errorIn);
+              return res.status(500).json({ error: 'Internal Server Error' });
+          }
+
+          const latestCustomerOut = resultsOut.length > 0 ? resultsOut : [];
+          const latestCustomerIn = resultsIn.length > 0 ? resultsIn : [];
+
+          res.json({ latestCustomerOut, latestCustomerIn });
+      });
+  });
+});
+
+
 
 //for vibrations
 app.get('/api/latest-vibrations', (req, res) => {
@@ -622,6 +658,9 @@ app.get('/api/check-latest-vibration', (req, res) => {
 });
 
 
+
+
+
 // Function to handle proximity sensor alert
 async function handleProximitySensor(userId, tableName) {
   try {
@@ -647,6 +686,8 @@ async function handleProximitySensor(userId, tableName) {
     throw error;
   }
 }
+
+
 
 // Endpoint for proximity sensor out
 app.get('/api/proximity-sensor-out', async (req, res) => {
@@ -716,3 +757,5 @@ app.post('/api/update-proximity-sensor', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
