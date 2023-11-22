@@ -71,6 +71,7 @@ const midnightTask = schedule.scheduleJob('0 0 * * *', () => {
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: true,
@@ -96,45 +97,27 @@ app.use('/mainWebsite', express.static(path.join(__dirname, 'public', 'mainWebsi
 
 // Routes
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'signIn.html'));
+  res.sendFile(path.join(__dirname, 'public', 'signInAndSignUp.html'));
 });
 
-app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'signUp.html'));
-});
+// app.get('/signup', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'signUp.html'));
+// });
 
-app.post(
-  '/signup',
-  [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 5 }),
-    body('confirmPassword').custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Password confirmation does not match password');
-      }
-      return true;
-    }),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
+app.post('/signup', async (req, res) => {
     const { email, password } = req.body;
 
     // Check if the email already exists
     db.query('SELECT * FROM users WHERE email = ?', [email], (checkErr, results) => {
       if (checkErr) {
         console.error('Error checking existing user:', checkErr);
-        res.send('Error checking existing user');
+        res.send('<script>alert("Error checking existing user");window.location="/login"</script>');
         return;
       }
 
       if (results.length > 0) {
         // Email already exists
-        res.send('User with this email already exists');
+        res.send('<script>alert("Error checking existing user");window.location="/login";</script>');
         return;
       }
 
@@ -163,7 +146,7 @@ app.post(
             // Send verification email
             sendVerificationEmail(email, verificationToken);
 
-            res.redirect('/login');
+            res.send('<script>alert("Verification email sent. Please check your email."); window.location="/login";</script>');
           }
         );
       });
@@ -172,7 +155,7 @@ app.post(
 );
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'signIn.html'));
+  res.sendFile(path.join(__dirname, 'public', 'signInAndSignUp.html'));
 });
 
 app.post('/login', async (req, res) => {
@@ -189,14 +172,12 @@ app.post('/login', async (req, res) => {
     const user = results[0];
 
     if (!user) {
-      // User not found
-      res.send('Invalid credentials');
+      res.send(`<script>alert("Invalid credentials");window.location = "/login";</script>`);
       return;
     }
 
     if (!user.is_verified) {
-      // User not verified
-      res.send('Account not verified. Please check your email for the verification link.');
+      res.send('<script>alert("Account not verified. Please check your email for the verification link.");window.location = "/login";</script>.');
       return;
     }
 
@@ -207,7 +188,7 @@ app.post('/login', async (req, res) => {
 
       res.redirect('/dashboard');
     } else {
-      res.send('Invalid credentials');
+      res.send(`<script>alert("Please check your password!");window.location = "/login";</script>`);
     }
   });
 });
@@ -231,7 +212,6 @@ app.post('/forgot-password', (req, res) => {
     const user = results[0];
 
     if (!user) {
-      // If the email is not found, you may want to respond with a message like "Email not registered"
       res.status(404).json({ error: 'Email not registered' });
       return;
     }
@@ -303,7 +283,7 @@ app.get('/api/camera', (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-    console.log('Camera data:', results); // Log the results to the console
+    console.log('Camera data:', results);
 
     res.json(results);
   });
@@ -603,31 +583,28 @@ app.get('/api/latest-vibrations', (req, res) => {
 });
 
 
-
-app.get('/api/all-vibrations', (req, res) => {
+//for the cameraLinks
+app.post('/api/cameraLink', (req, res) => {
   const userId = req.session.userId;
+  const outCameraLink = req.body.outCamera;
+  const inCameraLink = req.body.inCamera;
 
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const query = 'SELECT vibrationValue, vibrationTimestamp FROM vibrations WHERE userId = ?';
+  const updateQuery = 'UPDATE camera SET cameraIn = ?, cameraOut = ? WHERE userId = ?';
 
-  db.query(query, [userId], (error, results) => {
+  db.query(updateQuery, [inCameraLink, outCameraLink, userId], (error, results) => {
     if (error) {
-      console.error('Error fetching all vibrations:', error);
+      console.error('Error updating camera:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     } else {
-      const vibrations = results.map(record => ({
-        vibrationTimestamp: record.vibrationTimestamp.toISOString(),
-        vibrationValue: record.vibrationValue,
-      }));
-
-      res.json({ vibrations });
+      // Handle the response after the update is successful
+      res.json({ message: 'Camera links updated successfully' });
     }
   });
 });
-
 
 //for notifications
 app.get('/api/check-latest-vibration', (req, res) => {
@@ -654,6 +631,101 @@ app.get('/api/check-latest-vibration', (req, res) => {
         res.json({ alert: 0 }); // No vibration data found
       }
     }
+  });
+});
+
+
+// Endpoint for all customer out data
+app.get('/api/all-customer-out', (req, res) => {
+  const userId = req.session.userId;
+
+  // Check if the user is authenticated
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Fetch customer out data for the authenticated user
+  const query = 'SELECT customerOutID, customerOut, customerTimeStampOut FROM customersOut WHERE userId = ? ORDER BY customerTimeStampOut';
+
+  db.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error('Error querying customer out data:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    const customerOutData = results.map(record => ({
+      customerId: record.customerOutID,
+      customerOut: record.customerOut,
+      customerTimeStamp: record.customerTimeStampOut,
+    }));
+
+    res.json({ customerOutData });
+  });
+});
+
+// Endpoint for all customer in data
+app.get('/api/all-customer-in', (req, res) => {
+  const userId = req.session.userId;
+
+  // Check if the user is authenticated
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Fetch customer in data for the authenticated user
+  const query = 'SELECT customerInID, customerIn, customerTimeStampIn FROM customersIn WHERE userId = ? ORDER BY customerTimeStampIn';
+
+  db.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error('Error querying customer in data:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    const customerInData = results.map(record => ({
+      customerId: record.customerInID,
+      customerIn: record.customerIn,
+      customerTimeStamp: record.customerTimeStampIn,
+    }));
+
+    res.json({ customerInData });
+  });
+});
+
+app.post('/api/update-customer', (req, res) => {
+  const { type, customerId, newValue } = req.body;
+
+  // Check if the provided type is valid
+  const validTypes = ['Customer In', 'Customer Out'];
+  if (!validTypes.includes(type)) {
+    return res.status(400).json({ error: 'Invalid customer type' });
+  }
+
+  // Check if the customer with the given ID exists
+  const tableName = type === 'Customer In' ? 'customersIn' : 'customersOut';
+  const checkCustomerQuery = `SELECT * FROM ${tableName} WHERE ${type.toLowerCase()}ID = ?`;
+
+  db.query(checkCustomerQuery, [customerId], (checkErr, results) => {
+    if (checkErr) {
+      console.error('Error checking existing customer:', checkErr);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    if (results.length === 0) {
+      // Customer not found
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    // Update the customer information
+    const updateQuery = `UPDATE ${tableName} SET ${type.toLowerCase()} = ? WHERE ${type.toLowerCase()}ID = ?`;
+    db.query(updateQuery, [newValue, customerId], (updateErr) => {
+      if (updateErr) {
+        console.error('Error updating customer:', updateErr);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      // Respond with a success message
+      res.json({ message: 'Customer updated successfully' });
+    });
   });
 });
 
@@ -686,8 +758,6 @@ async function handleProximitySensor(userId, tableName) {
     throw error;
   }
 }
-
-
 
 // Endpoint for proximity sensor out
 app.get('/api/proximity-sensor-out', async (req, res) => {
@@ -722,40 +792,32 @@ app.get('/api/proximity-sensor-in', async (req, res) => {
 
 
 
-//for arduino
-// Function to update proximity sensor data
-async function updateProximitySensor(userId, tableName, newTriggerValue) {
-  try {
-    // Update trigger value for the current session user
-    const updateQuery = `UPDATE ${tableName} SET ${tableName === 'proximitySensorOut' ? 'triggerOut' : 'triggerIn'} = ? WHERE userId = ?`;
-    await db.promise().query(updateQuery, [newTriggerValue, userId]);
 
-    return { success: true };
-  } catch (error) {
-    console.error(`Error updating proximity sensor data for ${tableName}:`, error);
-    throw error;
+
+//for arduino codes and endpoint
+let userIn = 0;
+let motionState = "FALSE";
+app.post('/motion', (req, res) => {
+  console.log(req.body.motionState);
+  if (req.body.motionState === 'HIGH') {
+    userIn++;
+    console.log('Motion Detected! Incrementing userIn:', userIn);
+  } else {
+    console.log('Motion Ended');
+    console.log(userIn);
   }
-}
-
-// Endpoint to update proximity sensor data
-app.post('/api/update-proximity-sensor', async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { newTriggerValue, tableName } = req.body;
-
-    if (!newTriggerValue || !tableName) {
-      return res.status(400).json({ error: 'Bad Request' });
-    }
-
-    const result = await updateProximitySensor(userId, tableName, newTriggerValue);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  res.sendStatus(200);
 });
 
 
+app.get('/getMotionState', (req, res) => {
+  if (userIn >0) {
+    motionState = 'HIGH';
+    console.log(userIn);
+  }
+
+  console.log('Sending motion state to client:', motionState);
+
+  // Send the motion state as JSON to the client
+  res.json({ motionState });
+});

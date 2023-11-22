@@ -1,36 +1,64 @@
-:root{
+:root {
     font-size: 16px;
 }
 
-.accordions-container{
-    margin-left: 7rem;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
 }
-/* .accordion-body {
-    max-width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-} 
-*/
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.accordion-container {
+    max-width: 80%;
+    margin: 20px auto;
+    font-family: Arial, sans-serif;
+}
+
+.accordion {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    width: 100%; /* Set the width to 100% */
+}
+
+.accordion-item {
+    border-bottom: 1px solid #ddd;
+}
+
+.accordion-button {
+    width: 100%;
+    text-align: left;
+    padding: 35px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.accordion-content {
+    display: none;
+    padding: 15px; 
+}
+
+.accordion-item.active .accordion-content {
+    display: block;
+}
 
 @media only screen and (max-width: 600px) {
-    .accordions-container{
+    .accordions-container {
         flex-direction: column;
         margin-left: 4%;
         margin-top: 14px;        
     }
-
-    .out-camera{
-        margin-bottom: 15px;
-        width: 90%;
-    }
-    .in-camera{
-        margin-bottom: 3px;
-        width: 90%;
-    }
-    
 }
-
-
-
-
-

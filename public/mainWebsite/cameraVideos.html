@@ -1,45 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/mainWebsite/camera.css">
-    <link
-      href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" type="image/x-icon" href="resources/favicon.ico">
-    <title>Video Camera</title>
+    <title>Cameras</title>
 </head>
-
 <body>
-  <div id="vibrations"></div>
-  <div id="noOfCustomerOut"></div>
-  <div id="noOfCustomerIn"></div>
-    <div id="navbar-container"></div>    
-    <div class="camera-container">
-        <div class="out-camera">
-            <h2>Outside Camera</h2>
-            <iframe class="camera-iframe" id="outCameraIframe" frameborder="0" allowfullscreen>
-                <!-- Your video content for outCameraIframe goes here -->
-            </iframe>
+    <div class="container">
+        <div id="linkModal"></div>
+        <div id="vibrations"></div>
+        <div id="noOfCustomerOut"></div>
+        <div id="noOfCustomerIn"></div>
+        <div id="navbar-container"></div>
+    
+        <div class="camera-container">
+            <div class="out-camera">
+                <h2>Outside Camera</h2>
+                <iframe class="camera-iframe" id="outCameraIframe" frameborder="0" allowfullscreen>
+                    <!-- Your video content for outCameraIframe goes here -->
+                </iframe>
+            </div>
+            <div class="in-camera">
+                <h2>Inside Camera</h2>
+                <iframe class="camera-iframe" id="inCameraIframe" frameborder="0" allowfullscreen>
+                    <!-- Your video content for inCameraIframe goes here -->
+                </iframe>
+            </div>
         </div>
-        <div class="in-camera">
-            <h2>Inside Camera</h2>
-            <div id="inCameraLoader">Loading...</div>
-            <iframe class="camera-iframe" id="inCameraIframe" frameborder="0" allowfullscreen>
-                <!-- Your video content for inCameraIframe goes here -->
-            </iframe>
-        </div>
-
-        <form id="doorControlForm" action="/api/door-control" method="post">
-          <button type="submit" name="doorState" value="1">Open Door</button>
-          <button type="submit" name="doorState" value="0">Close Door</button>
-      </form>
-      
+    
+        <form id="doorControlForm" class="doorControl" action="/api/door-control" method="post">
+            <button type="submit" name="doorState" value="1">Open Door</button>
+            <button type="submit" name="doorState" value="0">Close Door</button>
+        </form>
+    
     </div>
+    
 
     <script src="/mainWebsite/navLoader.js"></script>
     <script src="/mainWebsite/alert.js"></script>
     <script src="/mainWebsite/camera.js"></script>
+    <script src="/mainWebsite/linkmodal.js"></script>
 </body>
 </html>

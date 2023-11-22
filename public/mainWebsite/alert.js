@@ -1,13 +1,13 @@
 // Function to fetch data from the server and show a modal
-async function fetchDataAndShowModal(endpoint, targetElementId, modalFilePath) {
+async function fetchDataAndShowPersonAlert(endpoint, modalFilePath) {
   try {
     const response = await fetch(endpoint);
     const data = await response.json();
 
     console.log('Data received from server:', data);
 
-    if (data.alert) {
-      console.log('Vibration alert! Showing modal...');
+    if (data.motionState === 'HIGH') {
+      console.log('Motion detected! Showing person alert...');
 
       const modalResponse = await fetch(modalFilePath);
       const modalHtml = await modalResponse.text();
@@ -49,15 +49,15 @@ async function fetchDataAndShowModal(endpoint, targetElementId, modalFilePath) {
 }
 
 // Set up an interval to fetch data every 6 seconds
-setInterval(function() {
-  fetchDataAndShowModal('/api/check-latest-vibration', 'vibrations', '/mainWebsite/notifications/vibration.html');
+setInterval(function () {
+  fetchDataAndShowPersonAlert('/getMotionState', '/mainWebsite/notifications/personIn.html');
 }, 6000);
 
 // Initial fetch for proximity sensor out
-fetchDataAndShowModal('/api/proximity-sensor-out', 'noOfCustomerOut', '/mainWebsite/notifications/personOut.html');
+fetchDataAndShowPersonAlert('/api/proximity-sensor-out', '/mainWebsite/notifications/personOut.html');
 
 // Initial fetch for proximity sensor in
-fetchDataAndShowModal('/api/proximity-sensor-in', 'noOfCustomerIn', '/mainWebsite/notifications/personIn.html');
+fetchDataAndShowPersonAlert('/api/proximity-sensor-in', '/mainWebsite/notifications/personIn.html');
 
 // Initial fetch for vibration
-fetchDataAndShowModal('/api/check-latest-vibration', 'vibrations', '/mainWebsite/notifications/vibration.html');
+fetchDataAndShowPersonAlert('/api/check-latest-vibration', '/mainWebsite/notifications/vibration.html');

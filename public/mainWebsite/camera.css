@@ -2,73 +2,53 @@
     font-size: 16px;
 }
 
+.container {
+    margin-left:0;
+    font-family: Arial, sans-serif;
+}
+
 .camera-container {
-    margin-left: 7rem;
-    display: flex;
-    height: 100vh;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
 }
 
-.out-camera {
-    border-radius: 25px;
-    margin-right: 25px;
-    height: 80%;
-    width: 50%;
-    background-color: green;
-}
-
-.in-camera {
-    border-radius: 25px;
-    height: 80%;
-    width: 50%;
-    margin-right: 25px;
-    background-color: black;
+.camera-container h2 {
+    text-align: center;
 }
 
 .camera-iframe {
-    width: 560px;
-    height: 315px;
-}
-
-.camera-iframe iframe {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: 75vh;
+    background-color: blue; /* Adjust the height as needed */
+    object-fit: contain;
 }
 
-.control-buttons {
+.doorControl {
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
+    justify-content: center;
+    margin: 20px;
 }
 
-button {
+.doorControl button {
     padding: 10px;
+    margin: 0 10px;
     font-size: 16px;
-    cursor: pointer;
-    background-color: #3498db;
-    color: #ffffff;
+    background-color: gold;
+    color: white;
     border: none;
     border-radius: 5px;
+    cursor: pointer;
 }
 
-@media only screen and (max-width: 600px) {
+/* Add responsive styles as needed */
+@media screen and (max-width: 600px) {
+    .container{
+        margin-left: 0;
+        margin-bottom: 110px;
+    }
     .camera-container {
-        margin-bottom: 5rem;
-        display: flex;
-        flex-direction: column;
-        margin-left: 4%;
-        margin-top: 14px;
-    }
-
-    .out-camera {
-        margin-bottom: 15px;
-        width: 90%;
-    }
-
-    .in-camera {
-        margin-bottom: 3px;
-        width: 90%;
+        grid-template-columns: 1fr;
     }
 }

@@ -1,34 +1,36 @@
+
 document.addEventListener('DOMContentLoaded', function () {
-  // Set up intervals to fetch and render door states and vibrations every 10 seconds
   setInterval(function () {
     fetchDataAndRender('/api/all-door-states', 'doorLogsTableBody', formatDoorState);
-  }, 4000);
+  }, 10000);
 
   setInterval(function () {
-    fetchDataAndRender('/api/all-vibrations', 'doorVibrationTableBody', formatVibration);
-  }, 4000);
+    fetchDataAndRender('/api/latest-vibrations', 'doorVibrationTableBody', formatVibration);
+  }, 10000);
+  
+  setInterval(() => {
+    fetchAndRenderCustomerOut();
+    fetchAndRenderCustomerIn();
+  }, 10000);
 
-  // Function to fetch and update data for door states and vibrations
+
   function fetchDataAndRender(apiEndpoint, tableBodyId, formatFunction) {
-    // Fetch data from the API endpoint
     fetch(apiEndpoint)
       .then(response => response.json())
       .then(data => {
-        // Log the data to the console for debugging
-        console.log(`Data from ${apiEndpoint}:`, data);
-
-        // Check if the data is an object with a property
         const dataArray = Array.isArray(data)
           ? data
-          : Array.isArray(data.doorStates) // Check for doorStates property in case of door states
+          : Array.isArray(data.doorStates)
           ? data.doorStates
-          : Array.isArray(data.vibrations) // Check for vibrations property in case of vibrations
+          : Array.isArray(data.vibrations)
           ? data.vibrations
+          : Array.isArray(data.customerOutData)
+          ? data.customerOutData
+          : Array.isArray(data.customerInData)
+          ? data.customerInData
           : [];
 
-        // Check if the data array exists and has elements
         if (dataArray.length > 0) {
-          // Call a function to update the table with the fetched data
           updateTable(tableBodyId, dataArray, formatFunction);
         } else {
           console.log(`No data received from ${apiEndpoint}`);
@@ -37,21 +39,15 @@ document.addEventListener('DOMContentLoaded', function () {
       .catch(error => console.error(`Error fetching data from ${apiEndpoint}:`, error));
   }
 
-  // Function to update the table with the fetched data
+
   function updateTable(tableBodyId, data, formatFunction) {
     const tableBody = document.getElementById(tableBodyId);
-
-    // Clear existing content in the table body
     tableBody.innerHTML = '';
 
-    // Iterate through the data and append rows to the table
     data.forEach(item => {
       const row = document.createElement('tr');
-
-      // Call the provided formatting function to format the data
       const formattedData = formatFunction(item);
 
-      // Create cells based on the formatted data
       const timestampCell = document.createElement('td');
       timestampCell.textContent = formattedData.timestamp;
       row.appendChild(timestampCell);
@@ -65,19 +61,100 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Function to format door state data
   function formatDoorState(doorState) {
     return {
+      type: 'Door',
       timestamp: new Date(doorState.doorTimestamp).toLocaleString(),
-      state: doorState.doorState === 0 ? 'Close' : 'Open'
+      state: doorState.doorState === 0 ? 'Close' : 'Open',
     };
   }
 
-  // Function to format vibration data
   function formatVibration(vibration) {
     return {
+      type: 'Vibration',
       timestamp: new Date(vibration.vibrationTimestamp).toLocaleString(),
-      state: vibration.vibrationValue >= 60 ? 'Danger' : 'Normal'
+      state: vibration.vibrationValue >= 60 ? 'Danger' : 'Normal',
     };
   }
 });
+
+function formatTimestamp(timestamp) {
+  return new Date(timestamp).toLocaleString();
+}
+
+async function fetchAndRenderCustomerOut() {
+  const response = await fetch('/api/all-customer-out');
+  const data = await response.json();
+
+  const customerOutTableBody = document.getElementById('customerOutTableBody');
+  customerOutTableBody.innerHTML = '';
+
+  if (data.customerOutData) {
+    data.customerOutData.forEach(record => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${record.customerId}</td>
+        <td>${formatTimestamp(record.customerTimeStamp)}</td>
+        <td>${record.customerOut}</td>
+        <td>
+          <button onclick="editCustomer('Customer Out', ${record.customerId})">Edit</button>
+        </td>
+      `;
+      customerOutTableBody.appendChild(row);
+    });
+  } else {
+    console.error('Invalid data received for customer out');
+  }
+}
+
+// Function to fetch and render customer in data
+async function fetchAndRenderCustomerIn() {
+  const response = await fetch('/api/all-customer-in');
+  const data = await response.json();
+
+  const customerInTableBody = document.getElementById('customerInTableBody');
+  customerInTableBody.innerHTML = '';
+
+  if (data.customerInData) {
+    data.customerInData.forEach(record => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${record.customerId}</td>
+        <td>${formatTimestamp(record.customerTimeStamp)}</td>
+        <td>${record.customerIn}</td>
+        <td>
+          <button onclick="editCustomer('Customer In', ${record.customerId})">Edit</button>
+        </td>
+      `;
+      customerInTableBody.appendChild(row);
+    });
+  } else {
+    console.error('Invalid data received for customer in');
+  }
+}
+
+function editCustomer(type, customerId) {
+  console.log('Editing customer:', type, 'ID:', customerId);
+  const newValue = prompt(`Enter new value for ${type}:`);
+  if (newValue !== null) {
+    // Make a POST request to the server endpoint
+    fetch('/api/update-customer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: type === 'Customer Out ID' ? 'Customer Out' : type,
+        customerId,
+        newValue,
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          console.error(data.error);
+        }
+      })
+      .catch(error => console.error('Error updating customer:', error));
+  }
+}
